@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HGD Business Center — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8CC85;
+    --gold-dark: #8A6A1E;
+    --dark: #0F0F0F;
+    --dark2: #1A1A1A;
+    --dark3: #242424;
+    --dark4: #2E2E2E;
+    --text: #F0EDE8;
+    --text2: #A89880;
+    --text3: #6B5E4E;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --orange: #F39C12;
+    --blue: #3498DB;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Sora', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+  /* LOGIN */
+  #loginScreen {
+    position: fixed; inset: 0; background: var(--dark);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .login-box {
+    background: var(--dark2); border: 1px solid var(--gold-dark);
+    border-radius: 16px; padding: 48px 40px; width: 380px; text-align: center;
+    box-shadow: 0 0 60px rgba(201,168,76,0.12);
+  }
+  .login-logo { font-size: 28px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+  .login-sub { font-size: 12px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
+  .login-box input {
+    width: 100%; background: var(--dark3); border: 1px solid var(--dark4);
+    border-radius: var(--radius); padding: 12px 16px; color: var(--text);
+    font-family: 'Sora', sans-serif; font-size: 14px; margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .login-box input:focus { outline: none; border-color: var(--gold); }
+  .btn-gold {
+    width: 100%; background: var(--gold); color: var(--dark); font-family: 'Sora', sans-serif;
+    font-weight: 600; font-size: 14px; padding: 13px; border: none; border-radius: var(--radius);
+    cursor: pointer; transition: background .2s, transform .1s;
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .err-msg { color: var(--red); font-size: 12px; margin-top: 8px; }
+
+  /* LAYOUT */
+  #app { display: none; flex-direction: row; min-height: 100vh; }
+  aside {
+    width: 240px; background: var(--dark2); border-right: 1px solid var(--dark4);
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--dark4); }
+  .sidebar-brand .name { font-size: 16px; font-weight: 700; color: var(--gold); }
+  .sidebar-brand .role { font-size: 11px; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; }
+  nav { flex: 1; padding: 16px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 20px;
+    font-size: 13px; color: var(--text2); cursor: pointer; transition: all .2s;
+    border-left: 3px solid transparent; position: relative;
+  }
+  .nav-item:hover { color: var(--text); background: var(--dark3); }
+  .nav-item.active { color: var(--gold); background: rgba(201,168,76,0.07); border-left-color: var(--gold); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { background: var(--red); color: #fff; font-size: 10px; border-radius: 10px; padding: 1px 6px; margin-left: auto; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--dark4); }
+  .logout-btn { font-size: 13px; color: var(--text3); cursor: pointer; transition: color .2s; }
+  .logout-btn:hover { color: var(--red); }
+  main { margin-left: 240px; flex: 1; padding: 28px; }
+
+  /* HEADER */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-size: 22px; font-weight: 700; }
+  .page-title span { color: var(--gold); }
+
+  /* CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--dark2); border: 1px solid var(--dark4); border-radius: var(--radius);
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gold); }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .stat-value { font-size: 30px; font-weight: 700; color: var(--gold); font-family: 'JetBrains Mono', monospace; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* TABLE */
+  .card { background: var(--dark2); border: 1px solid var(--dark4); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--dark4); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; padding: 12px 16px; border-bottom: 1px solid var(--dark4); text-align: left; font-weight: 500; }
+  td { font-size: 13px; padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(201,168,76,0.04); }
+
+  /* BADGES */
+  .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .badge-green { background: rgba(46,204,113,0.15); color: var(--green); }
+  .badge-red { background: rgba(231,76,60,0.15); color: var(--red); }
+  .badge-orange { background: rgba(243,156,18,0.15); color: var(--orange); }
+  .badge-blue { background: rgba(52,152,219,0.15); color: var(--blue); }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 7px; font-size: 12px; font-family: 'Sora', sans-serif; font-weight: 500; border: none; cursor: pointer; transition: all .2s; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn-primary { background: var(--gold); color: var(--dark); }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-danger { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
+  .btn-danger:hover { background: rgba(231,76,60,0.25); }
+  .btn-success { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .btn-success:hover { background: rgba(46,204,113,0.25); }
+  .btn-outline { background: transparent; color: var(--text2); border: 1px solid var(--dark4); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--dark2); border: 1px solid var(--dark4); border-radius: 14px;
+    width: 480px; max-width: 95vw; padding: 28px; box-shadow: var(--shadow);
+  }
+  .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--gold); }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .form-input {
+    width: 100%; background: var(--dark3); border: 1px solid var(--dark4); border-radius: 8px;
+    padding: 10px 14px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px;
+    transition: border-color .2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--gold); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* MESSAGING */
+  .messages-layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; height: calc(100vh - 180px); border: 1px solid var(--dark4); border-radius: var(--radius); overflow: hidden; }
+  .msg-list { background: var(--dark2); border-right: 1px solid var(--dark4); overflow-y: auto; }
+  .msg-contact { padding: 14px 16px; border-bottom: 1px solid var(--dark4); cursor: pointer; transition: background .2s; }
+  .msg-contact:hover, .msg-contact.active { background: var(--dark3); }
+  .msg-contact-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .msg-contact-preview { font-size: 11px; color: var(--text2); }
+  .msg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; margin-right: 6px; }
+  .chat-area { display: flex; flex-direction: column; background: var(--dark); }
+  .chat-header { padding: 14px 20px; border-bottom: 1px solid var(--dark4); background: var(--dark2); font-size: 14px; font-weight: 600; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-bubble { max-width: 65%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+  .chat-bubble.them { background: var(--dark3); align-self: flex-start; border-bottom-left-radius: 3px; }
+  .chat-bubble.me { background: rgba(201,168,76,0.2); align-self: flex-end; border-bottom-right-radius: 3px; color: var(--gold-light); }
+  .chat-time { font-size: 10px; color: var(--text3); margin-top: 3px; }
+  .chat-input-area { padding: 14px 16px; border-top: 1px solid var(--dark4); background: var(--dark2); display: flex; gap: 10px; }
+  .chat-input {
+    flex: 1; background: var(--dark3); border: 1px solid var(--dark4); border-radius: 8px;
+    padding: 10px 14px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px;
+  }
+  .chat-input:focus { outline: none; border-color: var(--gold); }
+
+  /* COMPLAINTS */
+  .complaint-card {
+    background: var(--dark2); border: 1px solid var(--dark4); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 14px;
+  }
+  .complaint-card .complaint-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .complaint-card .complaint-from { font-size: 13px; font-weight: 600; }
+  .complaint-card .complaint-about { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .complaint-card .complaint-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* NOTIF */
+  .notif-badge {
+    position: absolute; top: 8px; right: 16px; background: var(--red); color: #fff;
+    font-size: 9px; font-weight: 700; border-radius: 10px; padding: 2px 7px;
+  }
+
+  /* SETTINGS */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .settings-card { background: var(--dark2); border: 1px solid var(--dark4); border-radius: var(--radius); padding: 24px; }
+  .settings-card h3 { font-size: 14px; font-weight: 600; color: var(--gold); margin-bottom: 18px; }
+
+  /* SEARCH */
+  .search-bar {
+    background: var(--dark3); border: 1px solid var(--dark4); border-radius: 8px;
+    padding: 9px 14px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px;
+    width: 250px; transition: border-color .2s;
+  }
+  .search-bar:focus { outline: none; border-color: var(--gold); }
+
+  /* NOTIFICATION PANEL */
+  .notif-panel {
+    position: fixed; top: 0; right: 0; width: 340px; height: 100vh;
+    background: var(--dark2); border-left: 1px solid var(--dark4); z-index: 200;
+    transform: translateX(100%); transition: transform .3s; padding: 20px; overflow-y: auto;
+  }
+  .notif-panel.open { transform: translateX(0); }
+  .notif-item { padding: 14px; border-bottom: 1px solid var(--dark4); }
+  .notif-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .notif-text { font-size: 12px; color: var(--text2); }
+  .notif-time { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* TOP BAR */
+  .top-bar {
+    position: fixed; top: 0; left: 240px; right: 0; height: 56px;
+    background: var(--dark2); border-bottom: 1px solid var(--dark4);
+    display: flex; align-items: center; justify-content: flex-end; padding: 0 24px; gap: 16px; z-index: 100;
+  }
+  .top-bar-icon { font-size: 18px; cursor: pointer; color: var(--text2); transition: color .2s; position: relative; }
+  .top-bar-icon:hover { color: var(--gold); }
+  .top-bar-notif { background: var(--red); color: #fff; font-size: 9px; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; position: absolute; top: -6px; right: -6px; }
+  main { margin-top: 56px; }
+
+  /* POLICY BANNER */
+  .policy-banner {
+    background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.05));
+    border: 1px solid rgba(201,168,76,0.3); border-radius: var(--radius);
+    padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: var(--text2); line-height: 1.6;
+  }
+  .policy-banner strong { color: var(--gold); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--dark2); border: 1px solid var(--dark4); border-radius: 9px; padding: 4px; width: fit-content; }
+  .tab { padding: 8px 18px; border-radius: 7px; font-size: 13px; cursor: pointer; color: var(--text2); transition: all .2s; }
+  .tab.active { background: var(--gold); color: var(--dark); font-weight: 600; }
+
+  /* AVATAR */
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(201,168,76,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--gold); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+  .empty-state p { font-size: 14px; }
+
+  /* TOOLTIP */
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .status-dot.active { background: var(--green); }
+  .status-dot.suspended { background: var(--red); }
+  .status-dot.pending { background: var(--orange); }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--dark2); }
+  ::-webkit-scrollbar-thumb { background: var(--dark4); border-radius: 4px; }
+
+  @media (max-width: 900px) {
+    aside { width: 56px; }
+    .sidebar-brand .name, .sidebar-brand .role, .nav-item span { display: none; }
+    main { margin-left: 56px; }
+    .top-bar { left: 56px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">HGD Business Center</div>
+    <div class="login-sub">Espace Administrateur</div>
+    <input type="email" id="loginEmail" placeholder="Email administrateur" value="admin@hgd.com" />
+    <input type="password" id="loginPassword" placeholder="Mot de passe" value="Houngbedji55*" />
+    <button class="btn-gold" onclick="doLogin()">Se connecter</button>
+    <div class="err-msg" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- NOTIF PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <strong style="font-size:15px;">Notifications</strong>
+    <span onclick="closeNotif()" style="cursor:pointer;color:var(--text2);font-size:18px;">✕</span>
+  </div>
+  <div class="notif-item">
+    <div class="notif-title">🛒 Nouvelle demande de boutique</div>
+    <div class="notif-text">Marie Kouassi souhaite ouvrir une boutique.</div>
+    <div class="notif-time">Il y a 5 minutes</div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-title">⚠️ Plainte reçue</div>
+    <div class="notif-text">Un client se plaint du vendeur "Fashion Store".</div>
+    <div class="notif-time">Il y a 22 minutes</div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-title">💬 Nouveau message</div>
+    <div class="notif-text">Jean Dupont vous a envoyé un message.</div>
+    <div class="notif-time">Il y a 1 heure</div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-title">🏪 Boutique créée</div>
+    <div class="notif-text">La boutique "Tech World" a été activée.</div>
+    <div class="notif-time">Il y a 3 heures</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-brand">
+      <div class="name">HGD Admin</div>
+      <div class="role">Administrateur</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showSection('dashboard',this)">
+        <span class="icon">📊</span><span>Tableau de bord</span>
+      </div>
+      <div class="nav-item" onclick="showSection('boutiques',this)">
+        <span class="icon">🏪</span><span>Boutiques</span>
+      </div>
+      <div class="nav-item" onclick="showSection('plaintes',this)" style="position:relative;">
+        <span class="icon">⚠️</span><span>Plaintes</span>
+        <span class="notif-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="showSection('messages',this)" style="position:relative;">
+        <span class="icon">💬</span><span>Messages</span>
+        <span class="notif-badge">2</span>
+      </div>
+      <div class="nav-item" onclick="showSection('parametres',this)">
+        <span class="icon">⚙️</span><span>Paramètres</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="doLogout()">⬅️ Déconnexion</div>
+    </div>
+  </aside>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-icon" onclick="toggleNotif()" title="Notifications">
+      🔔
+      <div class="top-bar-notif">4</div>
+    </div>
+    <div class="avatar">AD</div>
+  </div>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <div class="page-title">Tableau de <span>bord</span></div>
+        <div style="font-size:12px;color:var(--text2);">HGD Business Center — Administration</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Boutiques actives</div>
+          <div class="stat-value">12</div>
+          <div class="stat-sub">+2 ce mois</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vendeurs inscrits</div>
+          <div class="stat-value">12</div>
+          <div class="stat-sub">Total plateforme</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Plaintes en cours</div>
+          <div class="stat-value" style="color:var(--red);">3</div>
+          <div class="stat-sub">À traiter</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Messages non lus</div>
+          <div class="stat-value" style="color:var(--blue);">2</div>
+          <div class="stat-sub">De vendeurs</div>
+        </div>
+      </div>
+
+      <div class="policy-banner">
+        <strong>⚖️ Politique de paiement HGD :</strong> Tous les paiements se font en face à face, une fois la marchandise vue et vérifiée par l'acheteur. Aucun paiement à l'avance n'est requis ni recommandé.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Boutiques récentes</div>
+          </div>
+          <table>
+            <thead><tr><th>Nom</th><th>Vendeur</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td>Fashion Store</td><td>Amina K.</td><td><span class="badge badge-green">Actif</span></td></tr>
+              <tr><td>Tech World</td><td>Patrick M.</td><td><span class="badge badge-green">Actif</span></td></tr>
+              <tr><td>Maison Élégance</td><td>Sophie A.</td><td><span class="badge badge-orange">Suspendu</span></td></tr>
+              <tr><td>Fresh Market</td><td>Ibrahim D.</td><td><span class="badge badge-green">Actif</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Dernières plaintes</div>
+          </div>
+          <table>
+            <thead><tr><th>Client</th><th>Boutique</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td>Jean L.</td><td>Fashion Store</td><td>01/05/2026</td></tr>
+              <tr><td>Marie C.</td><td>Tech World</td><td>30/04/2026</td></tr>
+              <tr><td>Paul N.</td><td>Fresh Market</td><td>29/04/2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOUTIQUES -->
+    <section class="section" id="sec-boutiques">
+      <div class="page-header">
+        <div class="page-title">Gestion des <span>Boutiques</span></div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="search-bar" type="text" placeholder="🔍 Rechercher une boutique..." oninput="filterShops(this.value)" />
+          <button class="btn btn-primary" onclick="openModal('createShopModal')">+ Créer une boutique</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <table id="shopsTable">
+          <thead>
+            <tr>
+              <th>Boutique</th>
+              <th>Vendeur</th>
+              <th>Email</th>
+              <th>Créée le</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="shopsBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PLAINTES -->
+    <section class="section" id="sec-plaintes">
+      <div class="page-header">
+        <div class="page-title">Gestion des <span>Plaintes</span></div>
+        <div class="tabs">
+          <div class="tab active" onclick="filterComplaints('all',this)">Toutes (3)</div>
+          <div class="tab" onclick="filterComplaints('new',this)">Nouvelles</div>
+          <div class="tab" onclick="filterComplaints('treated',this)">Traitées</div>
+        </div>
+      </div>
+
+      <div id="complaintsContainer">
+        <div class="complaint-card" data-status="new">
+          <div class="complaint-header">
+            <div>
+              <div class="complaint-from">Jean Laurent <span style="color:var(--text3);font-weight:400;">— Client</span></div>
+              <div class="complaint-about">Boutique concernée : <strong>Fashion Store</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="badge badge-red">Nouvelle</span>
+              <span style="font-size:11px;color:var(--text3);">01/05/2026</span>
+            </div>
+          </div>
+          <div class="complaint-text">"J'ai reçu un article différent de celui commandé. Le vendeur refuse de répondre à mes messages. Je demande un remboursement ou un échange."</div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-sm btn-success" onclick="markTreated(this)">✓ Marquer traitée</button>
+            <button class="btn btn-sm btn-outline" onclick="contactVendeur('Fashion Store')">Contacter le vendeur</button>
+          </div>
+        </div>
+
+        <div class="complaint-card" data-status="new">
+          <div class="complaint-header">
+            <div>
+              <div class="complaint-from">Marie Celestine <span style="color:var(--text3);font-weight:400;">— Cliente</span></div>
+              <div class="complaint-about">Boutique concernée : <strong>Tech World</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="badge badge-red">Nouvelle</span>
+              <span style="font-size:11px;color:var(--text3);">30/04/2026</span>
+            </div>
+          </div>
+          <div class="complaint-text">"Le prix affiché était de 15 000 FCFA mais lors du paiement en face à face, le vendeur a demandé 18 000 FCFA sans raison valable."</div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-sm btn-success" onclick="markTreated(this)">✓ Marquer traitée</button>
+            <button class="btn btn-sm btn-outline" onclick="contactVendeur('Tech World')">Contacter le vendeur</button>
+          </div>
+        </div>
+
+        <div class="complaint-card" data-status="new">
+          <div class="complaint-header">
+            <div>
+              <div class="complaint-from">Paul Nguessan <span style="color:var(--text3);font-weight:400;">— Client</span></div>
+              <div class="complaint-about">Boutique concernée : <strong>Fresh Market</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="badge badge-red">Nouvelle</span>
+              <span style="font-size:11px;color:var(--text3);">29/04/2026</span>
+            </div>
+          </div>
+          <div class="complaint-text">"Produit en mauvais état, emballage endommagé. Je souhaite que cette boutique soit vérifiée."</div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-sm btn-success" onclick="markTreated(this)">✓ Marquer traitée</button>
+            <button class="btn btn-sm btn-outline" onclick="contactVendeur('Fresh Market')">Contacter le vendeur</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section class="section" id="sec-messages">
+      <div class="page-header">
+        <div class="page-title">Messages <span>Vendeurs</span></div>
+      </div>
+      <div class="messages-layout">
+        <div class="msg-list">
+          <div class="msg-contact active" onclick="selectContact('Amina Kouassi','AK')">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span class="msg-dot"></span>
+              <div class="msg-contact-name">Amina Kouassi</div>
+            </div>
+            <div class="msg-contact-preview">Fashion Store · Non lu</div>
+          </div>
+          <div class="msg-contact" onclick="selectContact('Patrick Mensah','PM')">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span class="msg-dot"></span>
+              <div class="msg-contact-name">Patrick Mensah</div>
+            </div>
+            <div class="msg-contact-preview">Tech World · Non lu</div>
+          </div>
+          <div class="msg-contact" onclick="selectContact('Ibrahim Diallo','ID')">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <div class="msg-contact-name" style="margin-left:14px;">Ibrahim Diallo</div>
+            </div>
+            <div class="msg-contact-preview" style="margin-left:14px;">Fresh Market · Lu</div>
+          </div>
+        </div>
+        <div class="chat-area">
+          <div class="chat-header" id="chatHeader">💬 Amina Kouassi — Fashion Store</div>
+          <div class="chat-messages" id="chatMessages">
+            <div>
+              <div class="chat-bubble them">Bonjour, j'ai un problème avec un client qui dit ne pas avoir reçu son article. Que dois-je faire ?</div>
+              <div class="chat-time" style="margin-left:4px;color:var(--text3);font-size:10px;">10:23</div>
+            </div>
+            <div style="align-self:flex-end;">
+              <div class="chat-bubble me">Bonjour Amina. Vérifiez d'abord si le client a bien récupéré sa commande en face à face. Je vous reviens rapidement.</div>
+              <div class="chat-time" style="text-align:right;color:var(--text3);font-size:10px;">10:35</div>
+            </div>
+            <div>
+              <div class="chat-bubble them">D'accord, je vais vérifier. Merci.</div>
+              <div class="chat-time" style="margin-left:4px;color:var(--text3);font-size:10px;">10:38</div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <input class="chat-input" type="text" placeholder="Écrire un message..." id="chatInput" onkeydown="sendMessage(event)" />
+            <button class="btn btn-primary" onclick="sendMessage({key:'Enter'})">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARAMÈTRES -->
+    <section class="section" id="sec-parametres">
+      <div class="page-header">
+        <div class="page-title">Paramètres <span>Administrateur</span></div>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>📞 Informations de contact</h3>
+          <div class="form-group">
+            <label class="form-label">Numéro d'appel</label>
+            <input class="form-input" id="settPhone" value="0155861916" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Numéro WhatsApp</label>
+            <input class="form-input" id="settWhatsapp" value="0143718596" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse email</label>
+            <input class="form-input" id="settEmail" value="contact@hgdbusiness.com" />
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
+        </div>
+        <div class="settings-card">
+          <h3>🔒 Sécurité du compte</h3>
+          <div class="form-group">
+            <label class="form-label">Mot de passe actuel</label>
+            <input class="form-input" type="password" placeholder="••••••••" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nouveau mot de passe</label>
+            <input class="form-input" type="password" placeholder="••••••••" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmer le mot de passe</label>
+            <input class="form-input" type="password" placeholder="••••••••" />
+          </div>
+          <button class="btn btn-primary" onclick="savePassword()">Changer le mot de passe</button>
+        </div>
+        <div class="settings-card">
+          <h3>🏪 Politique de paiement</h3>
+          <div class="policy-banner" style="margin-bottom:14px;">
+            <strong>Paiement face à face uniquement.</strong> Chez HGD Business Center, tous les paiements se font en face à face, une fois la marchandise en vue et vérifiée par l'acheteur. Aucun paiement à l'avance n'est requis ni recommandé.
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modifier la politique</label>
+            <textarea class="form-input" rows="4" style="resize:vertical;">Chez HGD Business Center, tous les paiements se font en face à face, une fois la marchandise en vue et vérifiée par l'acheteur. Aucun paiement à l'avance n'est requis ni recommandé.</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="alert('Politique mise à jour !')">Mettre à jour</button>
+        </div>
+        <div class="settings-card">
+          <h3>ℹ️ À propos</h3>
+          <p style="font-size:13px;color:var(--text2);line-height:1.8;">
+            <strong>HGD Business Center</strong><br>
+            Plateforme de commerce B2B/B2C.<br><br>
+            <span style="color:var(--gold);">📞</span> 0155861916<br>
+            <span style="color:var(--gold);">📱</span> WhatsApp : 0143718596<br>
+            <span style="color:var(--gold);">✉️</span> contact@hgdbusiness.com
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL CRÉER BOUTIQUE -->
+<div class="modal-overlay" id="createShopModal">
+  <div class="modal">
+    <h3>🏪 Créer une nouvelle boutique</h3>
+    <div class="form-group">
+      <label class="form-label">Nom de la boutique *</label>
+      <input class="form-input" id="newShopName" placeholder="Ex: Super Store" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nom du vendeur *</label>
+      <input class="form-input" id="newVendorName" placeholder="Prénom Nom" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email du vendeur *</label>
+      <input class="form-input" type="email" id="newVendorEmail" placeholder="vendeur@email.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe initial *</label>
+      <input class="form-input" type="password" id="newVendorPass" placeholder="••••••••" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catégorie</label>
+      <select class="form-input" id="newShopCat">
+        <option>Mode & Vêtements</option>
+        <option>Électronique & Tech</option>
+        <option>Alimentation</option>
+        <option>Maison & Décoration</option>
+        <option>Beauté & Cosmétiques</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('createShopModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="createShop()">Créer la boutique</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMATION SUPPRESSION -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="width:380px;">
+    <h3 style="color:var(--red);">⚠️ Supprimer la boutique</h3>
+    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:20px;">Cette action est irréversible. La boutique et tous ses produits seront définitivement supprimés.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('deleteModal')">Annuler</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--dark3);border:1px solid var(--gold);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--text);z-index:999;display:none;box-shadow:var(--shadow);"></div>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════════════════════
+// HGD BUSINESS CENTER — ADMIN
+// Base de données Firebase partagée entre Admin, Vendeur et Acheteur
+// ═══════════════════════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc,
+  getDocs, addDoc, serverTimestamp, query, orderBy, updateDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── CONFIGURATION FIREBASE ── (à remplir avec vos infos Firebase)
+const firebaseConfig = {
+  apiKey: "AIzaSyAhOE5hKSyKmDiM-cRbKwbKCcnKDpNKMoY",
+  authDomain: "hgd-business.firebaseapp.com",
+  projectId: "hgd-business",
+  storageBucket: "hgd-business.firebasestorage.app",
+  messagingSenderId: "885036144444",
+  appId: "1:885036144444:web:22167ed1bb17a8dbc33039",
+  measurementId: "G-DMKJFGDL47"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const ADMIN_EMAIL = 'admin@hgd.com';
+const ADMIN_PASS  = 'Houngbedji55*';
+
+// ─── DONNÉES PAR DÉFAUT ───────────────────────────────────────────────────────
+const DEFAULT_SHOPS = [
+  { id:'shop1', name:'Fashion Store',   vendor:'Amina Kouassi',  email:'amina@fashion.com',  pass:'amina123',   date:'12/03/2026', status:'active' },
+  { id:'shop2', name:'Tech World',      vendor:'Patrick Mensah', email:'patrick@tech.com',   pass:'patrick123', date:'20/03/2026', status:'active' },
+  { id:'shop3', name:'Maison Elegance', vendor:'Sophie Adeyemi', email:'sophie@maison.com',  pass:'sophie123',  date:'05/04/2026', status:'suspended' },
+  { id:'shop4', name:'Fresh Market',    vendor:'Ibrahim Diallo', email:'ibrahim@fresh.com',  pass:'ibrahim123', date:'18/04/2026', status:'active' },
+];
+const DEFAULT_PRODUCTS = [
+  { id:'p101', shopId:'shop1', name:'Robe Africaine XL',     price:12000,  desc:'Belle robe aux couleurs africaines, taille XL.',  cat:'Mode & Vetements', emoji:'👗', badge:'Nouveau' },
+  { id:'p102', shopId:'shop1', name:'Sac a main cuir',        price:25000,  desc:'Sac en cuir veritable haute qualite.',            cat:'Accessoires',       emoji:'👜', badge:'' },
+  { id:'p103', shopId:'shop1', name:'Chaussures talons',      price:18500,  desc:'Talons elegants pour soirees.',                   cat:'Chaussures',        emoji:'👠', badge:'' },
+  { id:'p104', shopId:'shop2', name:'Smartphone Samsung A55', price:185000, desc:'Samsung Galaxy A55, 128GB, 8GB RAM.',             cat:'Electronique',      emoji:'📱', badge:'Promo' },
+  { id:'p105', shopId:'shop2', name:'Casque Bluetooth',       price:22000,  desc:'Casque sans fil, autonomie 30h.',                 cat:'Electronique',      emoji:'🎧', badge:'' },
+  { id:'p106', shopId:'shop4', name:'Tomates fraiches (1kg)', price:500,    desc:'Tomates locales fraiches du marche.',             cat:'Alimentation',      emoji:'🍅', badge:'' },
+  { id:'p107', shopId:'shop4', name:'Panier de legumes',      price:3500,   desc:'Legumes frais varies.',                           cat:'Alimentation',      emoji:'🥗', badge:'' },
+  { id:'p108', shopId:'shop1', name:'Foulard soie',            price:8000,   desc:'Foulard en soie aux motifs africains.',           cat:'Accessoires',       emoji:'🧣', badge:'' },
+];
+
+async function initFirestore() {
+  const snap = await getDocs(collection(db,'shops'));
+  if (snap.empty) {
+    for (const s of DEFAULT_SHOPS) {
+      const { id, ...data } = s;
+      await setDoc(doc(db,'shops',id), data);
+    }
+    for (const p of DEFAULT_PRODUCTS) {
+      const { id, ...data } = p;
+      await setDoc(doc(db,'products',id), data);
+    }
+    console.log('Donnees initiales chargees dans Firestore');
+  }
+}
+
+// ─── ETAT LOCAL ───────────────────────────────────────────────────────────────
+let shops = [];
+let products = [];
+let currentChatContact = '';
+
+// ─── LISTENERS TEMPS REEL ─────────────────────────────────────────────────────
+onSnapshot(collection(db,'shops'), snap => {
+  shops = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderShops();
+  renderDashboard();
+});
+
+onSnapshot(collection(db,'products'), snap => {
+  products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderDashboard();
+});
+
+onSnapshot(query(collection(db,'plaintes'), orderBy('ts','desc')), snap => {
+  const plaintes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderPlaintesFirebase(plaintes);
+});
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+window.doLogin = function() {
+  const e = document.getElementById('loginEmail').value.trim();
+  const p = document.getElementById('loginPassword').value;
+  if (e === ADMIN_EMAIL && p === ADMIN_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initFirestore();
+  } else {
+    document.getElementById('loginErr').textContent = 'Email ou mot de passe incorrect.';
+  }
+};
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') window.doLogin();
+});
+
+window.doLogout = function() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+};
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+window.showSection = function(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+};
+window.openModal  = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+// ─── RENDU BOUTIQUES ─────────────────────────────────────────────────────────
+function renderShops() {
+  const tbody = document.getElementById('shopsBody');
+  if (!tbody) return;
+  tbody.innerHTML = shops.map(s => {
+    const isActive = s.status === 'active';
+    return '<tr data-id="' + s.id + '">' +
+      '<td><strong>' + s.name + '</strong></td>' +
+      '<td>' + s.vendor + '</td>' +
+      '<td>' + s.email + '</td>' +
+      '<td>' + (s.date||'') + '</td>' +
+      '<td><span class="badge ' + (isActive?'badge-green':'badge-orange') + '">' + (isActive?'Actif':'Suspendu') + '</span></td>' +
+      '<td>' +
+        '<button class="btn btn-sm ' + (isActive?'btn-danger':'btn-success') + '" onclick="toggleShop('' + s.id + '')">' +
+          (isActive?'Suspendre':'Reactiver') +
+        '</button> ' +
+        '<button class="btn btn-sm btn-outline" onclick="deleteShop('' + s.id + '')" style="margin-left:4px;">Supprimer</button>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ─── TABLEAU DE BORD ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const active = shops.filter(s => s.status === 'active');
+  const statCards = document.querySelectorAll('.stat-value');
+  if (statCards[0]) statCards[0].textContent = active.length;
+  if (statCards[1]) statCards[1].textContent = shops.length;
+  const recentBody = document.querySelector('#sec-dashboard tbody');
+  if (recentBody) {
+    recentBody.innerHTML = shops.slice(0,4).map(s =>
+      '<tr><td>' + s.name + '</td><td>' + s.vendor + '</td>' +
+      '<td><span class="badge ' + (s.status==='active'?'badge-green':'badge-orange') + '">' +
+      (s.status==='active'?'Actif':'Suspendu') + '</span></td></tr>'
+    ).join('');
+  }
+}
+
+// ─── CREER BOUTIQUE ───────────────────────────────────────────────────────────
+window.createShop = async function() {
+  const name   = document.getElementById('newShopName').value.trim();
+  const vendor = document.getElementById('newVendorName').value.trim();
+  const email  = document.getElementById('newVendorEmail').value.trim();
+  const pass   = document.getElementById('newVendorPass').value.trim();
+  if (!name || !vendor || !email) { showToast('Remplissez tous les champs obligatoires.'); return; }
+  const newShop = {
+    name, vendor, email,
+    pass: pass || 'pass123',
+    date: new Date().toLocaleDateString('fr-FR'),
+    status: 'active',
+    createdAt: serverTimestamp()
+  };
+  await addDoc(collection(db,'shops'), newShop);
+  window.closeModal('createShopModal');
+  ['newShopName','newVendorName','newVendorEmail','newVendorPass'].forEach(f => document.getElementById(f).value = '');
+  showToast('Boutique "' + name + '" creee ! Le vendeur peut maintenant se connecter.');
+};
+
+// ─── SUSPENDRE / REACTIVER ────────────────────────────────────────────────────
+window.toggleShop = async function(id) {
+  const shop = shops.find(s => s.id === id);
+  if (!shop) return;
+  const newStatus = shop.status === 'active' ? 'suspended' : 'active';
+  await updateDoc(doc(db,'shops',id), { status: newStatus });
+  showToast(newStatus === 'suspended' ? 'Boutique suspendue.' : 'Boutique reactivee.');
+};
+
+// ─── SUPPRIMER ────────────────────────────────────────────────────────────────
+let pendingDeleteId = null;
+window.deleteShop = function(id) { pendingDeleteId = id; window.openModal('deleteModal'); };
+window.confirmDelete = async function() {
+  if (pendingDeleteId) {
+    await deleteDoc(doc(db,'shops', pendingDeleteId));
+    const prodSnap = await getDocs(collection(db,'products'));
+    for (const d of prodSnap.docs) {
+      if (d.data().shopId === pendingDeleteId) await deleteDoc(d.ref);
+    }
+    pendingDeleteId = null;
+  }
+  window.closeModal('deleteModal');
+  showToast('Boutique supprimee definitivement.');
+};
+
+// ─── RECHERCHE ────────────────────────────────────────────────────────────────
+window.filterShops = function(q) {
+  document.querySelectorAll('#shopsBody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+};
+
+// ─── PLAINTES FIREBASE ────────────────────────────────────────────────────────
+function renderPlaintesFirebase(plaintes) {
+  const container = document.getElementById('complaintsContainer');
+  if (!container) return;
+  const firebasePlaintes = plaintes.map(p =>
+    '<div class="complaint-card" data-id="' + p.id + '" data-status="' + (p.status||'new') + '">' +
+      '<div class="complaint-header">' +
+        '<div>' +
+          '<div class="complaint-from">' + p.name + ' <span style="color:var(--text3);font-weight:400;">— Client</span></div>' +
+          '<div class="complaint-about">Boutique : <strong>' + p.shop + '</strong></div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span class="badge ' + (p.status==='treated'?'badge-green':'badge-red') + '">' + (p.status==='treated'?'Traitee':'Nouvelle') + '</span>' +
+          '<span style="font-size:11px;color:var(--text3);">' + (p.date||'') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="complaint-text">"' + p.desc + '"</div>' +
+      (p.status!=='treated' ?
+        '<div style="margin-top:12px;display:flex;gap:8px;">' +
+          '<button class="btn btn-sm btn-success" onclick="markTreated(this,'' + p.id + '')">Marquer traitee</button>' +
+        '</div>' : '') +
+    '</div>'
+  ).join('');
+  // Conserver les plaintes statiques originales + ajouter celles de Firebase
+  const staticCards = Array.from(container.querySelectorAll('.complaint-card:not([data-id])'));
+  container.innerHTML = staticCards.map(c => c.outerHTML).join('') + firebasePlaintes;
+}
+
+window.markTreated = async function(btn, id) {
+  if (id) { try { await updateDoc(doc(db,'plaintes',id), { status:'treated' }); } catch(e){} }
+  const card = btn.closest('.complaint-card');
+  if (card) {
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.className = 'badge badge-green'; badge.textContent = 'Traitee'; }
+    card.dataset.status = 'treated';
+    const btnDiv = btn.closest('div[style]');
+    if (btnDiv) btnDiv.remove();
+  }
+  showToast('Plainte marquee comme traitee.');
+};
+
+window.filterComplaints = function(type, el) {
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.complaint-card').forEach(c => {
+    if (type === 'all') c.style.display = '';
+    else if (type === 'new') c.style.display = c.dataset.status === 'new' ? '' : 'none';
+    else c.style.display = c.dataset.status === 'treated' ? '' : 'none';
+  });
+};
+
+window.contactVendeur = function(shop) {
+  window.showSection('messages', null);
+  showToast('Redirection vers messagerie — ' + shop);
+};
+
+// ─── MESSAGES ─────────────────────────────────────────────────────────────────
+window.selectContact = function(name, initials) {
+  document.querySelectorAll('.msg-contact').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  currentChatContact = name;
+  document.getElementById('chatHeader').textContent = 'Messages — ' + name;
+  loadMessagesAdmin(name);
+};
+
+async function loadMessagesAdmin(contact) {
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;">Chargement...</div>';
+  try {
+    const q = query(collection(db,'messages'), orderBy('ts'));
+    const snap = await getDocs(q);
+    const msgs = snap.docs.map(d => d.data()).filter(m => m.contact === contact || m.from === contact);
+    if (!msgs.length) {
+      container.innerHTML = '<div><div class="chat-bubble them">Bonjour Administrateur !</div></div>';
+      return;
+    }
+    container.innerHTML = msgs.map(m =>
+      '<div style="' + (m.sender==='admin'?'align-self:flex-end;':'') + '">' +
+        '<div class="chat-bubble ' + (m.sender==='admin'?'me':'them') + '">' + m.text + '</div>' +
+        '<div class="chat-time" style="' + (m.sender==='admin'?'text-align:right;':'') + 'color:var(--text3);font-size:10px;">' + (m.time||'') + '</div>' +
+      '</div>'
+    ).join('');
+  } catch(e) {
+    container.innerHTML = '<div class="chat-bubble them">Bonjour Administrateur !</div>';
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+// Ecoute temps reel des messages
+onSnapshot(query(collection(db,'messages'), orderBy('ts')), snap => {
+  if (currentChatContact) loadMessagesAdmin(currentChatContact);
+});
+
+window.sendMessage = async function(e) {
+  if (e.key !== 'Enter' && e.type !== 'click') return;
+  const input = document.getElementById('chatInput');
+  const msg   = input.value.trim();
+  if (!msg || !currentChatContact) return;
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  await addDoc(collection(db,'messages'), {
+    contact: currentChatContact,
+    text: msg,
+    sender: 'admin',
+    from: 'Administrateur HGD',
+    time: now,
+    ts: serverTimestamp()
+  });
+  input.value = '';
+};
+
+// ─── PARAMETRES ───────────────────────────────────────────────────────────────
+window.saveSettings = () => showToast('Informations de contact mises a jour !');
+window.savePassword = () => showToast('Mot de passe change avec succes !');
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+window.toggleNotif = () => document.getElementById('notifPanel').classList.toggle('open');
+window.closeNotif  = () => document.getElementById('notifPanel').classList.remove('open');
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// Initialisation
+window.addEventListener('load', () => {
+  currentChatContact = 'Amina Kouassi';
+});
+</script>
+</body>
+</html>
